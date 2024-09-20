@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>XChaCha20 Encryption and Decryption with PBKDF2</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl.min.js"></script>
+    <script>
+        async function hashKey(keyString, iterations, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(keyString), 'PBKDF2', false, ['deriveBits']);
+            const key = await crypto.subtle.deriveBits({
+                name: 'PBKDF2',
+                salt: enc.encode(salt),
+                iterations: iterations,
+                hash: 'SHA-256',
+            }, keyMaterial, 256); // 256 bits
+            return new Uint8Array(key);
+        }
+
+        function hexToUint8Array(hex) {
+            if (hex.length % 2 !== 0 || /[^0-9A-Fa-f]/.test(hex)) {
+                throw new Error("Input Hex tidak valid.");
+            }
+            const arr = new Uint8Array(hex.length / 2);
+            for (let i = 0; i < hex.length; i += 2) {
+                arr[i / 2] = parseInt(hex.substr(i, 2), 16);
+            }
+            return arr;
+        }
+
+        function uint8ArrayToHex(arr) {
+            return Array.from(arr)
+                .map(b => ('0' + b.toString(16)).slice(-2))
+                .join('');
+        }
+
+        async function encryptText() {
+            const inputText = document.getElementById('encryptText').value;
+            const keyString = document.getElementById('encryptKey').value;
+            const nonceString = document.getElementById('encryptNonce').value;
+            const iterations = parseInt(document.getElementById('encryptIterations').value, 10);
+            const salt = document.getElementById('encryptSalt').value; // Salt dari input
+
+            const nonce = new TextEncoder().encode(nonceString);
+            if (nonce.length !== 24) {
+                alert("Nonce harus 24 bytes.");
+                return;
+            }
+
+            const key = await hashKey(keyString, iterations, salt);
+            let plaintext = new TextEncoder().encode(inputText);
+            const box = nacl.secretbox(plaintext, nonce, key);
+            const output = uint8ArrayToHex(box);
+
+            document.getElementById('encryptOutput').value = output; // Tidak lagi menyimpan salt
+        }
+
+        async function decryptText() {
+            const ciphertextInput = document.getElementById('decryptText').value;
+            const keyString = document.getElementById('decryptKey').value;
+            const nonceString = document.getElementById('decryptNonce').value;
+            const iterations = parseInt(document.getElementById('decryptIterations').value, 10);
+            const salt = document.getElementById('decryptSalt').value; // Salt dari input
+
+            const nonce = new TextEncoder().encode(nonceString);
+            if (nonce.length !== 24) {
+                alert("Nonce harus 24 bytes.");
+                return;
+            }
+
+            const key = await hashKey(keyString, iterations, salt);
+            let ciphertext;
+            try {
+                ciphertext = hexToUint8Array(ciphertextInput);
+            } catch (error) {
+                alert(error.message);
+                return;
+            }
+
+            const decrypted = nacl.secretbox.open(ciphertext, nonce, key);
+            if (!decrypted) {
+                alert("Dekripsi gagal. Mungkin kunci atau nonce salah.");
+                return;
+            }
+
+            const output = new TextDecoder().decode(decrypted);
+            document.getElementById('decryptOutput').value = output;
+        }
+    </script>
+</head>
+<body>
+    <h1>XChaCha20 Encryption and Decryption with PBKDF2</h1>
+    
+    <h3>Enkripsi</h3>
+    <textarea id="encryptText" rows="4" cols="50" placeholder="Masukkan teks untuk enkripsi (UTF-8 hanya)"></textarea><br>
+    <input type="text" id="encryptKey" placeholder="Masukkan kunci (UTF-8)"><br>
+    <input type="text" id="encryptNonce" placeholder="Masukkan nonce (UTF-8)"><br>
+    <input type="text" id="encryptSalt" placeholder="Masukkan salt (UTF-8)"><br>
+    <input type="number" id="encryptIterations" placeholder="Jumlah iterasi" min="1" value="10000"><br>
+    <button onclick="encryptText()">Enkripsi</button>
+    <h4>Hasil Enkripsi:</h4>
+    <textarea id="encryptOutput" readonly placeholder="Ciphertext (Hex) akan ditampilkan di sini"></textarea>
+
+    <h3>Dekripsi</h3>
+    <textarea id="decryptText" rows="4" cols="50" placeholder="Masukkan ciphertext untuk dekripsi (Hex hanya)"></textarea><br>
+    <input type="text" id="decryptKey" placeholder="Masukkan kunci (UTF-8)"><br>
+    <input type="text" id="decryptNonce" placeholder="Masukkan nonce (UTF-8)"><br>
+    <input type="text" id="decryptSalt" placeholder="Masukkan salt (UTF-8)"><br>
+    <input type="number" id="decryptIterations" placeholder="Jumlah iterasi" min="1" value="10000"><br>
+    <button onclick="decryptText()">Dekripsi</button>
+    <h4>Hasil Dekripsi:</h4>
+    <textarea id="decryptOutput" readonly placeholder="Plaintext (UTF-8) akan ditampilkan di sini"></textarea>
+</body>
+</html>
