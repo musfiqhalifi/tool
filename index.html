@@ -94,23 +94,23 @@
     <h1>XChaCha20 Encryption and Decryption with PBKDF2</h1>
     
     <h3>Enkripsi</h3>
-    <textarea id="encryptText" rows="4" cols="45" placeholder="Teks untuk enkripsi (UTF-8)"></textarea><br>
+    <textarea id="encryptText" rows="4" cols="40" placeholder="Teks untuk enkripsi (UTF-8)"></textarea><br>
     <input type="text" id="encryptKey" placeholder="Key (UTF-8)"><br>
     <input type="text" id="encryptNonce" placeholder="Nonce (UTF-8)"><br>
     <input type="text" id="encryptSalt" placeholder="Salt (UTF-8)"><br>
     <input type="number" id="encryptIterations" placeholder="Iterasi (Dec)" min="1"><br>
     <button onclick="encryptText()">Enkripsi</button>
     <h4>Hasil Enkripsi:</h4>
-    <textarea id="encryptOutput" rows="4" cols="45" readonly placeholder="Ciphertext (Hex)"></textarea>
+    <textarea id="encryptOutput" rows="4" cols="40" readonly placeholder="Ciphertext (Hex)"></textarea>
     <hr>
     <h3>Dekripsi</h3>
-    <textarea id="decryptText" rows="4" cols="45" placeholder="Ciphertext untuk dekripsi (Hex)"></textarea><br>
+    <textarea id="decryptText" rows="4" cols="40" placeholder="Ciphertext untuk dekripsi (Hex)"></textarea><br>
     <input type="text" id="decryptKey" placeholder="Key (UTF-8)"><br>
     <input type="text" id="decryptNonce" placeholder="Nonce (UTF-8)"><br>
     <input type="text" id="decryptSalt" placeholder="Salt (UTF-8)"><br>
     <input type="number" id="decryptIterations" placeholder="Iterasi (Dec)" min="1"><br>
     <button onclick="decryptText()">Dekripsi</button>
     <h4>Hasil Dekripsi:</h4>
-    <textarea id="decryptOutput" rows="4" cols="45" readonly placeholder="Plaintext (UTF-8)"></textarea>
+    <textarea id="decryptOutput" rows="4" cols="40" readonly placeholder="Plaintext (UTF-8)"></textarea>
 </body>
 </html>
