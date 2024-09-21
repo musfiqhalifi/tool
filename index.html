@@ -104,6 +104,15 @@
             outputField.select();
             document.execCommand("copy");
         }
+
+        function toggleVisibility(id) {
+            const inputField = document.getElementById(id);
+            if (inputField.type === "password") {
+                inputField.type = "text";
+            } else {
+                inputField.type = "password";
+            }
+        }
     </script>
 </head>
 <body>
@@ -112,10 +121,13 @@
     <hr>
     <h3>Enkripsi</h3>
     <textarea id="encryptText" rows="4" cols="40" placeholder="Plaintext (UTF-8)"></textarea><br>
-    <input type="text" id="encryptKey" placeholder="Key (UTF-8)"><br>
-    <input type="text" id="encryptNonce" placeholder="Nonce (UTF-8)"><br>
-    <input type="text" id="encryptSalt" placeholder="Salt (UTF-8)"><br>
-    <input type="number" id="encryptIterations" placeholder="Jumlah iterasi" min="1"><br>
+    <input type="password" id="encryptKey" placeholder="Key (UTF-8)">
+    <button onclick="toggleVisibility('encryptKey')">Show/Hide</button><br>
+    <input type="password" id="encryptNonce" placeholder="Nonce (UTF-8)">
+    <button onclick="toggleVisibility('encryptNonce')">Show/Hide</button><br>
+    <input type="password" id="encryptSalt" placeholder="Salt (UTF-8)">
+    <button onclick="toggleVisibility('encryptSalt')">Show/Hide</button><br>
+    <input type="number" id="encryptIterations" placeholder="Iterasi" min="1"><br>
     <button onclick="encryptText()">Enkripsi</button>
     <h4>Status Enkripsi:</h4>
     <p id="encryptStatus"></p>
@@ -124,11 +136,14 @@
     <button onclick="copyToClipboard('encryptOutput')">Copy</button>
     <hr>
     <h3>Dekripsi</h3>
-    <textarea id="decryptText" rows="4" cols="40" placeholder="Ciphertext(Hex)"></textarea><br>
-    <input type="text" id="decryptKey" placeholder="Kunci (UTF-8)"><br>
-    <input type="text" id="decryptNonce" placeholder="Nonce (UTF-8)"><br>
-    <input type="text" id="decryptSalt" placeholder="Salt (UTF-8)"><br>
-    <input type="number" id="decryptIterations" placeholder="Jumlah iterasi" min="1"><br>
+    <textarea id="decryptText" rows="4" cols="40" placeholder="Ciphertext (Hex)"></textarea><br>
+    <input type="password" id="decryptKey" placeholder="Key (UTF-8)">
+    <button onclick="toggleVisibility('decryptKey')">Show/Hide</button><br>
+    <input type="password" id="decryptNonce" placeholder="Nonce (UTF-8)">
+    <button onclick="toggleVisibility('decryptNonce')">Show/Hide</button><br>
+    <input type="password" id="decryptSalt" placeholder="Salt (UTF-8)">
+    <button onclick="toggleVisibility('decryptSalt')">Show/Hide</button><br>
+    <input type="number" id="decryptIterations" placeholder="Iterasi" min="1"><br>
     <button onclick="decryptText()">Dekripsi</button>
     <h4>Status Dekripsi:</h4>
     <p id="decryptStatus"></p>
