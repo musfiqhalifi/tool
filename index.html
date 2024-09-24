@@ -1,34 +1,191 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex, nofollow">
-    <title>XChaCha20-Poly1305 Encryption and Decryption with PBKDF2</title>
+    <title>Enkripsi XChaCha20-Poly1305 dengan PBKDF2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl.min.js"></script>
+    <style>
+        textarea { width: 98%; }
+        input { width: 98%;}
+    </style>
+</head>
+<body>
+    <hr>
+    <h1>Enkripsi dan Dekripsi XChaCha20-Poly1305 dengan PBKDF2</h1>
+    <hr>
+    <h2>Enkripsi</h2>
+    <form id="encryptForm">
+        <select id="inputFormatEncrypt">
+            <option value="utf8">UTF-8</option>
+            <option value="hex">Hex</option>
+            <option value="base32">Base32</option>
+            <option value="base64">Base64</option>
+        </select>
+        <button type="button" onclick="clearText('inputText', 'encryptCounter', 'encryptStatus', 'outputEncryptCounter', 'additionalOutput')">Clear</button>
+        <br>
+        <textarea id="inputText" rows="5" placeholder="Plaintext" oninput="updateCounter('encryptCounter', this.value)"></textarea>
+        <div id="encryptCounter" class="counter">Karakter: 0 | Bit: 0</div>
+        <br>
+        <input type="text" id="password" placeholder="Password (UTF-8)">
+        <br>
+        <button type="button" onclick="togglePassword('password')">Show/Hide</button>
+        <button type="button" onclick="generateStrongPassword('password', 1024)">Generate</button>
+        <br>
+        <input type="text" id="salt" placeholder="Salt (UTF-8, 32 karakter)" maxlength="32">
+        <br>
+        <button type="button" onclick="togglePassword('salt')">Show/Hide</button>
+        <button type="button" onclick="generateStrongPassword('salt', 32)">Generate</button>
+        <br>
+        <input type="number" id="iterations" placeholder="Iterasi (Dec)" min="1" required>
+        <br>
+        <button type="button" onclick="generateRandomNumber()">Generate</button>
+        <br>
+        <input type="text" id="nonce" placeholder="Nonce (UTF-8, 24 karakter)" maxlength="24">
+        <br>
+        <button type="button" onclick="togglePassword('nonce')">Show/Hide</button>
+        <button type="button" onclick="generateStrongPassword('nonce', 24)">Generate</button>
+        <br>
+        <br>
+        <button type="submit">Enkripsi</button>
+    </form>
+    <h3>Status Enkripsi</h3>
+    <div id="encryptStatus" class="status"></div>
+    <h3>Output Enkripsi</h3>
+    <select id="outputFormatEncrypt">
+        <option value="hex">Hex</option>
+        <option value="base32">Base32</option>
+        <option value="base64">Base64</option>
+    </select>
+    <br>
+    <textarea id="outputEncrypt" rows="5" placeholder="Ciphertext" readonly></textarea>
+    <div id="outputEncryptCounter" class="counter">Karakter: 0 | Bit: 0</div>
+    <button type="button" onclick="copyToClipboard('outputEncrypt')">Copy</button>
+    <h3>Informasi Enkripsi/Dekripsi</h3>
+    <textarea id="additionalOutput" rows="5" placeholder="Nonce, Salt, dan Iterasi" readonly></textarea>
+    <button type="button" onclick="copyToClipboard('additionalOutput')">Copy</button>
+    <hr>
+    <h2>Dekripsi</h2>
+    <form id="decryptForm">
+        <select id="inputFormatDecrypt">
+            <option value="hex">Hex</option>
+            <option value="base32">Base32</option>
+            <option value="base64">Base64</option>
+        </select>
+        <button type="button" onclick="clearText('inputCiphertext', 'decryptCounter', 'decryptStatus', 'outputDecryptCounter')">Clear</button>
+        <br>
+        <textarea id="inputCiphertext" rows="5" placeholder="Ciphertext" oninput="updateCounter('decryptCounter', this.value)"></textarea>
+        <div id="decryptCounter" class="counter">Karakter: 0 | Bit: 0</div>
+        <br>
+        <input type="text" id="decPassword" placeholder="Password (UTF-8)">
+        <br>
+        <button type="button" onclick="togglePassword('decPassword')">Show/Hide</button>
+        <br>
+        <input type="text" id="decSalt" placeholder="Salt (UTF-8, 32 karakter)" maxlength="32">
+        <br>
+        <button type="button" onclick="togglePassword('decSalt')">Show/Hide</button>
+        <br>
+        <input type="number" id="decIterations" placeholder="Iterasi (Dec)" min="1" required>
+        <br>
+        <input type="text" id="decNonce" placeholder="Nonce (UTF-8, 24 karakter)" maxlength="24">
+        <br>
+        <button type="button" onclick="togglePassword('decNonce')">Show/Hide</button>
+        <br>
+        <br>
+        <button type="submit">Dekripsi</button>
+    </form>
+    <h3>Status Dekripsi</h3>
+    <div id="decryptStatus" class="status"></div>
+    <h3>Output Dekripsi</h3>
+    <select id="outputFormatDecrypt">
+        <option value="utf8">UTF-8</option>
+        <option value="hex">Hex</option>
+        <option value="base32">Base32</option>
+        <option value="base64">Base64</option>
+    </select>
+    <br>
+    <textarea id="outputDecrypt" rows="5" placeholder="Plaintext" readonly></textarea>
+    <div id="outputDecryptCounter" class="counter">Karakter: 0 | Bit: 0</div>
+    <button type="button" onclick="copyToClipboard('outputDecrypt')">Copy</button>
+    <hr>
+
     <script>
-        async function hashKey(keyString, iterations, salt) {
-            const enc = new TextEncoder();
-            const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(keyString), 'PBKDF2', false, ['deriveBits']);
-            const key = await crypto.subtle.deriveBits({
-                name: 'PBKDF2',
-                salt: enc.encode(salt),
-                iterations: iterations,
-                hash: 'SHA-256',
-            }, keyMaterial, 256); // 256 bits
-            return new Uint8Array(key);
+    function generateStrongPassword(inputId, length) {
+        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?";
+        let password = "";
+        const array = new Uint32Array(length);
+
+        // Menggunakan crypto.getRandomValues untuk mendapatkan angka acak
+        window.crypto.getRandomValues(array);
+
+        for (let i = 0; i < length; i++) {
+            const randomIndex = array[i] % charset.length; // Mengambil index yang valid
+            password += charset[randomIndex];
         }
 
-        async function hashInputToSHA256(input) {
-            const enc = new TextEncoder();
-            const hashed = await crypto.subtle.digest('SHA-256', enc.encode(input));
-            return new Uint8Array(hashed);
+        document.getElementById(inputId).value = password;
+    }
+
+    function generateRandomNumber() {
+        const array = new Uint32Array(1);
+    
+        // Menggunakan crypto.getRandomValues untuk mendapatkan angka acak
+        window.crypto.getRandomValues(array);
+
+        const randomNumber = (array[0] % 9999999) + 1; // Mengambil angka dalam rentang yang diinginkan
+        document.getElementById('iterations').value = randomNumber;
+    }
+
+        async function pbkdf2(password, salt, iterations, keyLength) {
+            const encoder = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']);
+            const derivedBits = await crypto.subtle.deriveBits({
+                name: 'PBKDF2',
+                salt: encoder.encode(salt),
+                iterations: iterations,
+                hash: 'SHA-256'
+            }, keyMaterial, keyLength * 8);
+            return new Uint8Array(derivedBits);
+        }
+
+        async function sha256(message) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(message);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            return new Uint8Array(hashBuffer);
+        }
+
+        async function getKeyAndNonce(keyInput, nonceInput) {
+            return {
+                key: new TextEncoder().encode(keyInput).slice(0, 32),
+                nonce: new TextEncoder().encode(nonceInput).slice(0, 24)
+            };
+        }
+
+        function stringToUint8Array(str, format) {
+            switch (format) {
+                case 'utf8':
+                    return new TextEncoder().encode(str);
+                case 'hex':
+                    return hexToUint8Array(str);
+                case 'base32':
+                    return base32ToUint8Array(str);
+                case 'base64':
+                    return base64ToUint8Array(str);
+                default:
+                    return new Uint8Array();
+            }
+        }
+
+        function uint8ArrayToString(arr) {
+            return new TextDecoder().decode(arr);
+        }
+
+        function uint8ArrayToHex(arr) {
+            return Array.from(arr).map(b => ('0' + b.toString(16)).slice(-2)).join('');
         }
 
         function hexToUint8Array(hex) {
-            if (hex.length % 2 !== 0 || /[^0-9A-Fa-f]/.test(hex)) {
-                throw new Error("Input Hex tidak valid.");
-            }
             const arr = new Uint8Array(hex.length / 2);
             for (let i = 0; i < hex.length; i += 2) {
                 arr[i / 2] = parseInt(hex.substr(i, 2), 16);
@@ -36,120 +193,174 @@
             return arr;
         }
 
-        function uint8ArrayToHex(arr) {
-            return Array.from(arr)
-                .map(b => ('0' + b.toString(16)).slice(-2))
-                .join('');
-        }
+        function base32ToUint8Array(base32) {
+            const base32Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            const output = [];
+            let value = 0;
+            let bitsLength = 0;
 
-        async function encryptText() {
-            document.getElementById('encryptStatus').innerText = "Enkripsi sedang berlangsung...";
-            try {
-                const inputText = document.getElementById('encryptText').value;
-                const rawKey = document.getElementById('encryptKey').value;
-                const rawNonce = document.getElementById('encryptNonce').value;
-                const iterations = parseInt(document.getElementById('encryptIterations').value, 10);
-                const salt = document.getElementById('encryptSalt').value; // Salt dari input
+            for (const char of base32) {
+                const index = base32Alphabet.indexOf(char);
+                if (index === -1) continue;
 
-                const nonce = await hashInputToSHA256(rawNonce);
-                const key = await hashKey(rawKey, iterations, salt);
-                let plaintext = new TextEncoder().encode(inputText);
-                const box = nacl.secretbox(plaintext, nonce.slice(0, 24), key);
-                const output = uint8ArrayToHex(box);
+                value = (value << 5) | index;
+                bitsLength += 5;
 
-                document.getElementById('encryptOutput').value = output; // Tidak lagi menyimpan salt
-            } catch (error) {
-                alert("Terjadi kesalahan: " + error.message);
-            } finally {
-                document.getElementById('encryptStatus').innerText = "Enkripsi selesai.";
-            }
-        }
-
-        async function decryptText() {
-            document.getElementById('decryptStatus').innerText = "Dekripsi sedang berlangsung...";
-            try {
-                const ciphertextInput = document.getElementById('decryptText').value;
-                const rawKey = document.getElementById('decryptKey').value;
-                const rawNonce = document.getElementById('decryptNonce').value;
-                const iterations = parseInt(document.getElementById('decryptIterations').value, 10);
-                const salt = document.getElementById('decryptSalt').value; // Salt dari input
-
-                const nonce = await hashInputToSHA256(rawNonce);
-                const key = await hashKey(rawKey, iterations, salt);
-                let ciphertext;
-                try {
-                    ciphertext = hexToUint8Array(ciphertextInput);
-                } catch (error) {
-                    alert(error.message);
-                    return;
+                while (bitsLength >= 8) {
+                    output.push((value >> (bitsLength - 8)) & 0xff);
+                    bitsLength -= 8;
                 }
+            }
+            return new Uint8Array(output);
+        }
 
-                const decrypted = nacl.secretbox.open(ciphertext, nonce.slice(0, 24), key);
-                if (!decrypted) {
-                    alert("Dekripsi gagal. Mungkin kunci atau nonce salah.");
-                    return;
+        function base64ToUint8Array(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes;
+        }
+
+        function uint8ArrayToBase32(arr) {
+            const base32Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            let output = '';
+            let bits = 0;
+            let value = 0;
+
+            for (const byte of arr) {
+                value = (value << 8) | byte;
+                bits += 8;
+
+                while (bits >= 5) {
+                    output += base32Alphabet[(value >> (bits - 5)) & 0x1f];
+                    bits -= 5;
                 }
-
-                const output = new TextDecoder().decode(decrypted);
-                document.getElementById('decryptOutput').value = output;
-            } catch (error) {
-                alert("Terjadi kesalahan: " + error.message);
-            } finally {
-                document.getElementById('decryptStatus').innerText = "Dekripsi selesai.";
             }
-        }
 
-        function copyToClipboard(outputId) {
-            const outputField = document.getElementById(outputId);
-            outputField.select();
-            document.execCommand("copy");
-        }
-
-        function toggleVisibility(id) {
-            const inputField = document.getElementById(id);
-            if (inputField.type === "password") {
-                inputField.type = "text";
-            } else {
-                inputField.type = "password";
+            if (bits > 0) {
+                output += base32Alphabet[(value << (5 - bits)) & 0x1f];
             }
+            return output;
         }
+
+        function uint8ArrayToBase64(arr) {
+            let binary = '';
+            const len = arr.byteLength;
+            for (let i = 0; i < len; i++) {
+                binary += String.fromCharCode(arr[i]);
+            }
+            return btoa(binary);
+        }
+
+        function updateCounter(counterId, text) {
+            const counterElement = document.getElementById(counterId);
+            const characterCount = text.length;
+            const bitCount = characterCount * 8; // 1 karakter = 8 bit
+            counterElement.textContent = `Karakter: ${characterCount} | Bit: ${bitCount}`;
+        }
+
+        function togglePassword(id) {
+            const input = document.getElementById(id);
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+
+        function clearText(textareaId, counterId, statusId, outputCounterId, additionalOutputId) {
+            document.getElementById(textareaId).value = '';
+            document.getElementById(counterId).textContent = 'Karakter: 0 | Bit: 0';
+            document.getElementById(statusId).textContent = '';
+            document.getElementById(outputCounterId).textContent = 'Karakter: 0 | Bit: 0';
+            document.getElementById(additionalOutputId).value = '';
+        }
+
+        function copyToClipboard(textareaId) {
+            const textarea = document.getElementById(textareaId);
+            textarea.select();
+            document.execCommand('copy');
+            alert('Teks telah disalin ke clipboard!');
+        }
+
+        document.getElementById('encryptForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const iterations = parseInt(document.getElementById('iterations').value);
+            if (isNaN(iterations) || iterations <= 0) {
+                document.getElementById('encryptStatus').textContent = 'Jumlah iterasi harus lebih dari 0!';
+                return;
+            }
+
+            document.getElementById('encryptStatus').textContent = 'Memproses...';
+
+            const text = document.getElementById('inputText').value;
+            const password = document.getElementById('password').value;
+            const salt = document.getElementById('salt').value;
+            const nonceInput = document.getElementById('nonce').value;
+            const outputFormat = document.getElementById('outputFormatEncrypt').value;
+
+            const { key, nonce } = await getKeyAndNonce(password, nonceInput);
+            const derivedKey = await pbkdf2(password, salt, iterations, 32);
+
+            const message = stringToUint8Array(text, document.getElementById('inputFormatEncrypt').value);
+            const box = nacl.secretbox(message, nonce, derivedKey);
+            const ciphertextHex = uint8ArrayToHex(box);
+
+            let output;
+            switch (outputFormat) {
+                case 'hex':
+                    output = ciphertextHex;
+                    break;
+                case 'base32':
+                    output = uint8ArrayToBase32(box);
+                    break;
+                case 'base64':
+                    output = uint8ArrayToBase64(box);
+                    break;
+            }
+
+            document.getElementById('outputEncrypt').value = output;
+            updateCounter('outputEncryptCounter', output);
+            document.getElementById('encryptStatus').textContent = 'Enkripsi berhasil!';
+
+            // Tampilkan nonce, salt, dan iterasi
+            const additionalOutput = `Informasi Enkripsi/Dekripsi XChaCha20-Poly1305 With PBKDF2\n\nPassword:\n${password}\n\nSalt:\n${salt}\n\nIterasi:\n${iterations}\n\nNonce:\n${nonceInput}`;
+            document.getElementById('additionalOutput').value = additionalOutput;
+        });
+
+        document.getElementById('decryptForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const iterations = parseInt(document.getElementById('decIterations').value);
+            if (isNaN(iterations) || iterations <= 0) {
+                document.getElementById('decryptStatus').textContent = 'Jumlah iterasi harus lebih dari 0!';
+                return;
+            }
+
+            document.getElementById('decryptStatus').textContent = 'Memproses...';
+
+            const ciphertext = document.getElementById('inputCiphertext').value;
+            const password = document.getElementById('decPassword').value;
+            const salt = document.getElementById('decSalt').value;
+            const nonceInput = document.getElementById('decNonce').value;
+            const inputFormat = document.getElementById('inputFormatDecrypt').value;
+
+            const { key, nonce } = await getKeyAndNonce(password, nonceInput);
+            const derivedKey = await pbkdf2(password, salt, iterations, 32);
+
+            const box = stringToUint8Array(ciphertext, inputFormat);
+            const decrypted = nacl.secretbox.open(box, nonce, derivedKey);
+
+            if (!decrypted) {
+                document.getElementById('decryptStatus').textContent = 'Dekripsi gagal!';
+                return;
+            }
+
+            const output = uint8ArrayToString(decrypted);
+            document.getElementById('outputDecrypt').value = output;
+            updateCounter('outputDecryptCounter', output);
+            document.getElementById('decryptStatus').textContent = 'Dekripsi berhasil!';
+        });
     </script>
-</head>
-<body>
-    <hr>
-    <h1>XChaCha20-Poly1305 Encryption and Decryption with PBKDF2</h1>
-    <hr>
-    <h3>Enkripsi</h3>
-    <textarea id="encryptText" rows="4" cols="40" placeholder="Plaintext (UTF-8)"></textarea><br>
-    <input type="password" id="encryptKey" placeholder="Key (UTF-8)">
-    <button onclick="toggleVisibility('encryptKey')">Show/Hide</button><br>
-    <input type="password" id="encryptNonce" placeholder="Nonce (UTF-8)">
-    <button onclick="toggleVisibility('encryptNonce')">Show/Hide</button><br>
-    <input type="password" id="encryptSalt" placeholder="Salt (UTF-8)">
-    <button onclick="toggleVisibility('encryptSalt')">Show/Hide</button><br>
-    <input type="number" id="encryptIterations" placeholder="Iterasi" min="1"><br>
-    <button onclick="encryptText()">Enkripsi</button>
-    <h4>Status Enkripsi:</h4>
-    <p id="encryptStatus"></p>
-    <h4>Hasil Enkripsi:</h4>
-    <textarea id="encryptOutput" rows="4" cols="40" readonly placeholder="Ciphertext (Hex)"></textarea><br>
-    <button onclick="copyToClipboard('encryptOutput')">Copy</button>
-    <hr>
-    <h3>Dekripsi</h3>
-    <textarea id="decryptText" rows="4" cols="40" placeholder="Ciphertext (Hex)"></textarea><br>
-    <input type="password" id="decryptKey" placeholder="Key (UTF-8)">
-    <button onclick="toggleVisibility('decryptKey')">Show/Hide</button><br>
-    <input type="password" id="decryptNonce" placeholder="Nonce (UTF-8)">
-    <button onclick="toggleVisibility('decryptNonce')">Show/Hide</button><br>
-    <input type="password" id="decryptSalt" placeholder="Salt (UTF-8)">
-    <button onclick="toggleVisibility('decryptSalt')">Show/Hide</button><br>
-    <input type="number" id="decryptIterations" placeholder="Iterasi" min="1"><br>
-    <button onclick="decryptText()">Dekripsi</button>
-    <h4>Status Dekripsi:</h4>
-    <p id="decryptStatus"></p>
-    <h4>Hasil Dekripsi:</h4>
-    <textarea id="decryptOutput" rows="4" cols="40" readonly placeholder="Plaintext (UTF-8)"></textarea><br>
-    <button onclick="copyToClipboard('decryptOutput')">Copy</button>
-    <hr>
 </body>
 </html>
