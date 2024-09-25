@@ -41,7 +41,7 @@
         <input type="text" id="salt" placeholder="Salt (UTF-8)">
         <br>
         <button type="button" onclick="togglePassword('salt')">Show/Hide</button>
-        <button type="button" onclick="generateStrongPassword('salt', 64)">Generate</button>
+        <button type="button" onclick="generateRandom('salt', 64)">Generate</button>
         <br>
         <input type="number" id="iterations" placeholder="Iterasi (Dec)" min="1" required>
         <br>
@@ -50,7 +50,7 @@
         <input type="text" id="nonce" placeholder="Nonce (UTF-8, 24 karakter)" minlength="24" maxlength="24" required>
         <br>
         <button type="button" onclick="togglePassword('nonce')">Show/Hide</button>
-        <button type="button" onclick="generateStrongPassword('nonce', 24)">Generate</button>
+        <button type="button" onclick="generateRandom('nonce', 24)">Generate</button>
         <br>
         <br>
         <button type="submit">Enkripsi</button>
@@ -116,6 +116,22 @@
     <hr>
 
     <script>
+    function generateRandom(inputId, length) {
+        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$_&-+()/*:;!?~`|•√π÷×¶∆£¢€¥^°={}\%©®™✓[]№—_–·±[<{]}>★†‡„“”«»¡¿♪ΩΠμ§′∞≠≈‰℅";
+        let password = "";
+        const array = new Uint32Array(length);
+
+        // Menggunakan crypto.getRandomValues untuk mendapatkan angka acak
+        window.crypto.getRandomValues(array);
+
+        for (let i = 0; i < length; i++) {
+            const randomIndex = array[i] % charset.length; // Mengambil index yang valid
+            password += charset[randomIndex];
+        }
+
+        document.getElementById(inputId).value = password;
+    }      
+
     function generateStrongPassword(inputId, length) {
         const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$_&-+()/*:;!?~`|•√π÷×¶∆£¢€¥^°={}\%©®™✓[]№—_–·±[<{]}>★†‡„“”«»¡¿♪ΩΠμ§′∞≠≈‰℅";
         let password = "";
