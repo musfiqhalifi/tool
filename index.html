@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Enkripsi XChaCha20-Poly1305 dengan PBKDF2</title>
+    <title>Enkripsi XChaCha20-Poly1305 with PBKDF2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl.min.js"></script>
     <style>
         textarea { width: 98%; }
@@ -13,7 +13,7 @@
 </head>
 <body>
     <hr>
-    <h1>Enkripsi dan Dekripsi XChaCha20-Poly1305 dengan PBKDF2</h1>
+    <h1>Enkripsi dan Dekripsi XChaCha20-Poly1305 with PBKDF2</h1>
     <hr>
     <h2>Enkripsi</h2>
     <form id="encryptForm">
@@ -325,7 +325,7 @@
             document.getElementById('encryptStatus').textContent = 'Enkripsi berhasil!';
 
             // Tampilkan nonce, salt, dan iterasi
-            const additionalOutput = `Informasi Enkripsi/Dekripsi XChaCha20-Poly1305 With PBKDF2\n\nSalt:\n${salt}\n\nIterasi:\n${iterations}\n\nNonce:\n${nonceInput}`;
+            const additionalOutput = `Informasi Enkripsi/Dekripsi XChaCha20-Poly1305 with PBKDF2\n\nSalt:\n${salt}\n\nIterasi:\n${iterations}\n\nNonce:\n${nonceInput}`;
             document.getElementById('additionalOutput').value = additionalOutput;
         });
 
