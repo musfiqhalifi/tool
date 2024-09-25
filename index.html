@@ -42,7 +42,7 @@
         <br>
         <button type="button" onclick="generateRandomNumber()">Generate</button>
         <br>
-        <input type="text" id="nonce" placeholder="Nonce (UTF-8, 24 karakter)" minlength="24" maxlength="24">
+        <input type="text" id="nonce" placeholder="Nonce (UTF-8, 24 karakter)" minlength="24" maxlength="24" required>
         <br>
         <button type="button" onclick="togglePassword('nonce')">Show/Hide</button>
         <button type="button" onclick="generateStrongPassword('nonce', 24)">Generate</button>
@@ -82,13 +82,13 @@
         <br>
         <button type="button" onclick="togglePassword('decPassword')">Show/Hide</button>
         <br>
-        <input type="text" id="decSalt" placeholder="Salt (UTF-8, 32 karakter)" maxlength="32">
+        <input type="text" id="decSalt" placeholder="Salt (UTF-8)">
         <br>
         <button type="button" onclick="togglePassword('decSalt')">Show/Hide</button>
         <br>
         <input type="number" id="decIterations" placeholder="Iterasi (Dec)" min="1" required>
         <br>
-        <input type="text" id="decNonce" placeholder="Nonce (UTF-8, 24 karakter)" maxlength="24">
+        <input type="text" id="decNonce" placeholder="Nonce (UTF-8, 24 karakter)" minlength="24" maxlength="24" required>
         <br>
         <button type="button" onclick="togglePassword('decNonce')">Show/Hide</button>
         <br>
