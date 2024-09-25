@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <title>Enkripsi XChaCha20-Poly1305 dengan PBKDF2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl.min.js"></script>
     <style>
@@ -30,18 +31,18 @@
         <input type="password" id="password" placeholder="Password (UTF-8)">
         <br>
         <button type="button" onclick="togglePassword('password')">Show/Hide</button>
-        <button type="button" onclick="generateStrongPassword('password', 1024)">Generate</button>
+        <button type="button" onclick="generateStrongPassword('password', 64)">Generate</button>
         <br>
-        <input type="text" id="salt" placeholder="Salt (UTF-8, 32 karakter)" maxlength="32">
+        <input type="text" id="salt" placeholder="Salt (UTF-8)">
         <br>
         <button type="button" onclick="togglePassword('salt')">Show/Hide</button>
-        <button type="button" onclick="generateStrongPassword('salt', 32)">Generate</button>
+        <button type="button" onclick="generateStrongPassword('salt', 64)">Generate</button>
         <br>
         <input type="number" id="iterations" placeholder="Iterasi (Dec)" min="1" required>
         <br>
         <button type="button" onclick="generateRandomNumber()">Generate</button>
         <br>
-        <input type="text" id="nonce" placeholder="Nonce (UTF-8, 24 karakter)" maxlength="24">
+        <input type="text" id="nonce" placeholder="Nonce (UTF-8, 24 karakter)" minlength="24" maxlength="24">
         <br>
         <button type="button" onclick="togglePassword('nonce')">Show/Hide</button>
         <button type="button" onclick="generateStrongPassword('nonce', 24)">Generate</button>
@@ -111,7 +112,7 @@
 
     <script>
     function generateStrongPassword(inputId, length) {
-        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+[]{}|;:,.<>?";
+        const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$_&-+()/*:;!?~`|•√π÷×¶∆£¢€¥^°={}\%©®™✓[]№—_–·±[<{]}>★†‡„“”«»¡¿♪ΩΠμ§′∞≠≈‰℅";
         let password = "";
         const array = new Uint32Array(length);
 
