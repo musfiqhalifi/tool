@@ -345,6 +345,7 @@
             const salt = document.getElementById('decSalt').value;
             const nonceInput = document.getElementById('decNonce').value;
             const inputFormat = document.getElementById('inputFormatDecrypt').value;
+            const outputFormat = document.getElementById('outputFormatDecrypt').value; // Ambil nilai ini
 
             const { key, nonce } = await getKeyAndNonce(password, nonceInput);
             const derivedKey = await pbkdf2(password, salt, iterations, 32);
@@ -357,7 +358,24 @@
                 return;
             }
 
-            const output = uint8ArrayToString(decrypted);
+            let output;
+            switch (outputFormat) { // Menggunakan outputFormat yang baru didefinisikan
+                case 'utf8':
+                    output = uint8ArrayToString(decrypted);
+                    break;
+                case 'hex':
+                    output = uint8ArrayToHex(decrypted);
+                    break;
+                case 'base32':
+                    output = uint8ArrayToBase32(decrypted);
+                    break;
+                case 'base64':
+                    output = uint8ArrayToBase64(decrypted);
+                    break;
+                default:
+                    output = uint8ArrayToString(decrypted); // Default ke UTF-8
+            }
+
             document.getElementById('outputDecrypt').value = output;
             updateCounter('outputDecryptCounter', output);
             document.getElementById('decryptStatus').textContent = 'Dekripsi berhasil!';
