@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
-    <title>Enkripsi XChaCha20-Poly1305 with PBKDF2</title>
+    <title>Text Encryption/Decryption XChaCha20-Poly1305 with PBKDF2</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/tweetnacl/1.0.3/nacl.min.js"></script>
     <style>
         textarea { width: 98%; }
@@ -13,7 +13,7 @@
 </head>
 <body>
     <hr>
-    <h1>Enkripsi dan Dekripsi XChaCha20-Poly1305 with PBKDF2</h1>
+    <h1>Text Encryption/Decryption XChaCha20-Poly1305 with PBKDF2</h1>
     <hr>
     <h2>Enkripsi</h2>
     <form id="encryptForm">
@@ -62,7 +62,7 @@
     <textarea id="outputEncrypt" rows="5" placeholder="Ciphertext" readonly></textarea>
     <div id="outputEncryptCounter" class="counter">Karakter: 0 | Bit: 0</div>
     <button type="button" onclick="copyToClipboard('outputEncrypt')">Copy</button>
-    <h3>Informasi Enkripsi/Dekripsi</h3>
+    <h3>Encryption/Decryption Information</h3>
     <textarea id="additionalOutput" rows="5" placeholder="Nonce, Salt, dan Iterasi" readonly></textarea>
     <button type="button" onclick="copyToClipboard('additionalOutput')">Copy</button>
     <hr>
@@ -325,7 +325,7 @@
             document.getElementById('encryptStatus').textContent = 'Enkripsi berhasil!';
 
             // Tampilkan nonce, salt, dan iterasi
-            const additionalOutput = `Informasi Enkripsi/Dekripsi XChaCha20-Poly1305 with PBKDF2\n\nSalt:\n${salt}\n\nIterasi:\n${iterations}\n\nNonce:\n${nonceInput}`;
+            const additionalOutput = `Encryption/Decryption Information XChaCha20-Poly1305 with PBKDF2\n\nSalt:\n${salt}\n\nIterasi:\n${iterations}\n\nNonce:\n${nonceInput}`;
             document.getElementById('additionalOutput').value = additionalOutput;
         });
 
