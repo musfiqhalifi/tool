@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -9,6 +10,8 @@
     <style>
         textarea { width: 98%; }
         input { width: 98%;}
+}
+
     </style>
 </head>
 <body>
@@ -26,9 +29,11 @@
         <button type="button" onclick="clearText('inputText', 'encryptCounter', 'encryptStatus', 'outputEncryptCounter', 'additionalOutput')">Clear</button>
         <br>
         <textarea id="inputText" rows="5" placeholder="Plaintext" oninput="updateCounter('encryptCounter', this.value)"></textarea>
-        <div id="encryptCounter" class="counter">Karakter: 0 | Bit: 0</div>
+        <div id="encryptCounter" class="counter">Karakter: 0 | Ukuran: 0 Bit</div>
         <br>
         <input type="password" id="password" placeholder="Password (UTF-8)">
+        <div id="passwordEntropy"></div>
+        <div id="passwordStrength" class="strength-status"></div>
         <br>
         <button type="button" onclick="togglePassword('password')">Show/Hide</button>
         <button type="button" onclick="generateStrongPassword('password', 64)">Generate</button>
@@ -60,7 +65,7 @@
     </select>
     <br>
     <textarea id="outputEncrypt" rows="5" placeholder="Ciphertext" readonly></textarea>
-    <div id="outputEncryptCounter" class="counter">Karakter: 0 | Bit: 0</div>
+    <div id="outputEncryptCounter" class="counter">Karakter: 0 | Ukuran: 0 Bit</div>
     <button type="button" onclick="copyToClipboard('outputEncrypt')">Copy</button>
     <h3>Encryption/Decryption Information</h3>
     <textarea id="additionalOutput" rows="5" placeholder="Nonce, Salt, dan Iterasi" readonly></textarea>
@@ -76,7 +81,7 @@
         <button type="button" onclick="clearText('inputCiphertext', 'decryptCounter', 'decryptStatus', 'outputDecryptCounter')">Clear</button>
         <br>
         <textarea id="inputCiphertext" rows="5" placeholder="Ciphertext" oninput="updateCounter('decryptCounter', this.value)"></textarea>
-        <div id="decryptCounter" class="counter">Karakter: 0 | Bit: 0</div>
+        <div id="decryptCounter" class="counter">Karakter: 0 | Ukuran: 0 Bit</div>
         <br>
         <input type="password" id="decPassword" placeholder="Password (UTF-8)">
         <br>
@@ -106,7 +111,7 @@
     </select>
     <br>
     <textarea id="outputDecrypt" rows="5" placeholder="Plaintext" readonly></textarea>
-    <div id="outputDecryptCounter" class="counter">Karakter: 0 | Bit: 0</div>
+    <div id="outputDecryptCounter" class="counter">Karakter: 0 | Ukuran: 0 Bit</div>
     <button type="button" onclick="copyToClipboard('outputDecrypt')">Copy</button>
     <hr>
 
@@ -125,6 +130,12 @@
         }
 
         document.getElementById(inputId).value = password;
+    
+    const strength = checkPasswordStrength(password);
+    updatePasswordStrengthMeter(strength);
+    
+    const entropy = calculateEntropy(password);
+    document.getElementById('passwordEntropy').textContent = `Entropi: ${entropy.toFixed(0)} bit`;
     }
 
     function generateRandomNumber() {
@@ -260,7 +271,7 @@
             const counterElement = document.getElementById(counterId);
             const characterCount = text.length;
             const bitCount = characterCount * 8; // 1 karakter = 8 bit
-            counterElement.textContent = `Karakter: ${characterCount} | Bit: ${bitCount}`;
+            counterElement.textContent = `Karakter: ${characterCount} | Ukuran: ${bitCount} Bit`;
         }
 
         function togglePassword(id) {
@@ -270,9 +281,9 @@
 
         function clearText(textareaId, counterId, statusId, outputCounterId, additionalOutputId) {
             document.getElementById(textareaId).value = '';
-            document.getElementById(counterId).textContent = 'Karakter: 0 | Bit: 0';
+            document.getElementById(counterId).textContent = 'Karakter: 0 | Ukuran: 0 Bit';
             document.getElementById(statusId).textContent = '';
-            document.getElementById(outputCounterId).textContent = 'Karakter: 0 | Bit: 0';
+            document.getElementById(outputCounterId).textContent = 'Karakter: 0 | Ukuran: 0 Bit';
             document.getElementById(additionalOutputId).value = '';
         }
 
@@ -325,7 +336,7 @@
             document.getElementById('encryptStatus').textContent = 'Enkripsi berhasil!';
 
             // Tampilkan nonce, salt, dan iterasi
-            const additionalOutput = `Encryption/Decryption Information XChaCha20-Poly1305 with PBKDF2\n\nPassword:\n\n\nSalt:\n${salt}\n\nIterasi:\n${iterations}\n\nNonce:\n${nonceInput}`;
+            const additionalOutput = `Informasi Enkripsi/Dekripsi XChaCha20-Poly1305 dengan PBKDF2\n\nPassword:\n\n\nSalt:\n${salt}\n\nIterasi:\n${iterations}\n\nNonce:\n${nonceInput}\n\n*Disarankan simpan di tempat terpisah dengan Ciphertext`;
             document.getElementById('additionalOutput').value = additionalOutput;
         });
 
@@ -380,6 +391,67 @@
             updateCounter('outputDecryptCounter', output);
             document.getElementById('decryptStatus').textContent = 'Dekripsi berhasil!';
         });
+        
+function calculateEntropy(password) {
+    const length = password.length;
+    const charsetSize = 
+        (/[A-Z]/.test(password) ? 26 : 0) + // Huruf besar
+        (/[a-z]/.test(password) ? 26 : 0) + // Huruf kecil
+        (/\d/.test(password) ? 10 : 0) + // Angka
+        (/[^A-Za-z0-9]/.test(password) ? 32 : 0); // Karakter khusus
+
+    if (charsetSize === 0 || length === 0) return 0; // Entropi 0 jika tidak ada karakter
+
+    return Math.log2(Math.pow(charsetSize, length)); // Rumus entropi
+}
+        
+function checkPasswordStrength(password) {
+    const entropy = calculateEntropy(password);
+
+    if (entropy < 28) return 0;
+    if (entropy < 40) return 1;
+    if (entropy < 56) return 2;
+    if (entropy < 128) return 3;
+    if (entropy < 256) return 4;
+    return 5;
+}
+
+function updatePasswordStrengthMeter(strength) {
+    const strengthMeter = document.getElementById('passwordStrength');
+
+    switch (strength) {
+        case 0:
+            strengthMeter.textContent = 'Kekuatan Password: Sangat Lemah';
+            break;
+        case 1:
+            strengthMeter.textContent = 'Kekuatan Password: Lemah';
+            break;
+        case 2:
+            strengthMeter.textContent = 'Kekuatan Password: Sedang';
+            break;
+        case 3:
+            strengthMeter.textContent = 'Kekuatan Password: Kuat';
+            break;
+        case 4:
+            strengthMeter.textContent = 'Kekuatan Password: Sangat Kuat';
+            break;
+        case 5:
+            strengthMeter.textContent = 'Kekuatan Password: Tak Terpecahkan';
+            break;
+        default:
+            strengthMeter.textContent = '';
+    }
+}
+
+document.getElementById('password').addEventListener('input', function() {
+    const password = this.value;
+    const strength = checkPasswordStrength(password);
+    updatePasswordStrengthMeter(strength);
+    
+    const entropy = calculateEntropy(password);
+    document.getElementById('passwordEntropy').textContent = `Entropi: ${entropy.toFixed(0)} bit`;
+});
+        
     </script>
 </body>
 </html>
