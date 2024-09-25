@@ -325,7 +325,7 @@
             document.getElementById('encryptStatus').textContent = 'Enkripsi berhasil!';
 
             // Tampilkan nonce, salt, dan iterasi
-            const additionalOutput = `Informasi Enkripsi/Dekripsi XChaCha20-Poly1305 With PBKDF2\n\nPassword:\n${password}\n\nSalt:\n${salt}\n\nIterasi:\n${iterations}\n\nNonce:\n${nonceInput}`;
+            const additionalOutput = `Informasi Enkripsi/Dekripsi XChaCha20-Poly1305 With PBKDF2\n\nSalt:\n${salt}\n\nIterasi:\n${iterations}\n\nNonce:\n${nonceInput}`;
             document.getElementById('additionalOutput').value = additionalOutput;
         });
 
