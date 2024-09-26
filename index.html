@@ -29,20 +29,23 @@
         <div id="encryptCounter" class="counter">Karakter: 0 | Ukuran: 0 Bit</div>
         <br>
         <input type="password" id="password" placeholder="Password (UTF-8)">
+        <br>
         <div id="passwordEntropy"></div>
         <div id="passwordStrength" class="strength-status"></div>
-        <br>
         <button type="button" onclick="togglePassword('password')">Show/Hide</button>
         <button type="button" onclick="generateStrongPassword('password', 64)">Generate</button>
+        <br>
         <br>
         <input type="text" id="salt" placeholder="Salt (UTF-8)">
         <br>
         <button type="button" onclick="togglePassword('salt')">Show/Hide</button>
         <button type="button" onclick="generateRandom('salt', 64)">Generate</button>
         <br>
+        <br>
         <input type="number" id="iterations" placeholder="Iterasi (Dec)" min="1" required>
         <br>
         <button type="button" onclick="generateRandomNumber()">Generate</button>
+        <br>
         <br>
         <input type="text" id="nonce" placeholder="Nonce (UTF-8, 24 karakter)" minlength="24" maxlength="24" required>
         <br>
@@ -75,7 +78,7 @@
             <option value="base32">Base32</option>
             <option value="base64">Base64</option>
         </select>
-        <button type="button" onclick="clearText('inputCiphertext', 'decryptCounter', 'decryptStatus', 'outputDecryptCounter')">Clear</button>
+        <button type="button" onclick="clearText('inputCiphertext', 'decryptCounter', 'decryptStatus', 'outputDecryptCounter', 'additionalOutput')">Clear</button>
         <br>
         <textarea id="inputCiphertext" rows="5" placeholder="Ciphertext" oninput="updateCounter('decryptCounter', this.value, document.getElementById('inputFormatDecrypt').value)"></textarea>
         <div id="decryptCounter" class="counter">Karakter: 0 | Ukuran: 0 Bit</div>
@@ -84,11 +87,14 @@
         <br>
         <button type="button" onclick="togglePassword('decPassword')">Show/Hide</button>
         <br>
+        <br>
         <input type="text" id="decSalt" placeholder="Salt (UTF-8)">
         <br>
         <button type="button" onclick="togglePassword('decSalt')">Show/Hide</button>
         <br>
+        <br>
         <input type="number" id="decIterations" placeholder="Iterasi (Dec)" min="1" required>
+        <br>
         <br>
         <input type="text" id="decNonce" placeholder="Nonce (UTF-8, 24 karakter)" minlength="24" maxlength="24" required>
         <br>
@@ -438,10 +444,10 @@ function calculateEntropy(password) {
 function checkPasswordStrength(password) {
     const entropy = calculateEntropy(password);
 
-    if (entropy < 28) return 0;
-    if (entropy < 40) return 1;
-    if (entropy < 56) return 2;
-    if (entropy < 128) return 3;
+    if (entropy < 32) return 0;
+    if (entropy < 64) return 1;
+    if (entropy < 128) return 2;
+    if (entropy < 192) return 3;
     if (entropy < 256) return 4;
     return 5;
 }
