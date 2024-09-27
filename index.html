@@ -23,12 +23,12 @@
             <option value="base32">Base32</option>
             <option value="base64">Base64</option>
         </select>
-        <button type="button" onclick="clearText('inputText', 'encryptCounter', 'encryptStatus', 'outputEncryptCounter', 'additionalOutput')">Clear</button>
+        <button type="button" onclick="clearText('inputText', 'encryptCounter', 'encryptStatus', 'outputEncryptCounter')">Clear</button>
         <br>
         <textarea id="inputText" rows="5" placeholder="Plaintext" oninput="updateCounter('encryptCounter', this.value, document.getElementById('inputFormatEncrypt').value)"></textarea>
         <div id="encryptCounter" class="counter">Karakter: 0 | Ukuran: 0 Bit</div>
         <br>
-        <input type="password" id="password" placeholder="Password (UTF-8)">
+        <input type="password" id="password" placeholder="Password (UTF-8)" value="a">
         <br>
         <div id="passwordEntropy"></div>
         <div id="passwordStrength" class="strength-status"></div>
@@ -36,21 +36,9 @@
         <button type="button" onclick="generateStrongPassword('password', 64)">Generate</button>
         <br>
         <br>
-        <input type="text" id="salt" placeholder="Salt (UTF-8)">
-        <br>
-        <button type="button" onclick="togglePassword('salt')">Show/Hide</button>
-        <button type="button" onclick="generateRandom('salt', 64)">Generate</button>
-        <br>
-        <br>
-        <input type="number" id="iterations" placeholder="Iterasi (Dec)" min="1" required>
+        <input type="number" id="iterations" placeholder="Iterasi (Dec)" min="1" value="1" required>
         <br>
         <button type="button" onclick="generateRandomNumber()">Generate</button>
-        <br>
-        <br>
-        <input type="text" id="nonce" placeholder="Nonce (UTF-8, 24 karakter)" minlength="24" maxlength="24" required>
-        <br>
-        <button type="button" onclick="togglePassword('nonce')">Show/Hide</button>
-        <button type="button" onclick="generateRandom('nonce', 24)">Generate</button>
         <br>
         <br>
         <button type="submit">Enkripsi</button>
@@ -67,9 +55,6 @@
     <textarea id="outputEncrypt" rows="5" placeholder="Ciphertext" readonly></textarea>
     <div id="outputEncryptCounter" class="counter">Karakter: 0 | Ukuran: 0 Bit</div>
     <button type="button" onclick="copyToClipboard('outputEncrypt')">Copy</button>
-    <h3>Encryption/Decryption Information</h3>
-    <textarea id="additionalOutput" rows="5" placeholder="Nonce, Salt, dan Iterasi" readonly></textarea>
-    <button type="button" onclick="copyToClipboard('additionalOutput')">Copy</button>
     <hr>
     <h2>Dekripsi</h2>
     <form id="decryptForm">
@@ -78,27 +63,14 @@
             <option value="base32">Base32</option>
             <option value="base64">Base64</option>
         </select>
-        <button type="button" onclick="clearText('inputCiphertext', 'decryptCounter', 'decryptStatus', 'outputDecryptCounter', 'additionalOutput')">Clear</button>
+        <button type="button" onclick="clearText('inputCiphertext', 'decryptCounter', 'decryptStatus', 'outputDecryptCounter')">Clear</button>
         <br>
         <textarea id="inputCiphertext" rows="5" placeholder="Ciphertext" oninput="updateCounter('decryptCounter', this.value, document.getElementById('inputFormatDecrypt').value)"></textarea>
         <div id="decryptCounter" class="counter">Karakter: 0 | Ukuran: 0 Bit</div>
         <br>
-        <input type="password" id="decPassword" placeholder="Password (UTF-8)">
+        <input type="password" id="decPassword" placeholder="Password (UTF-8)" value="a">
         <br>
         <button type="button" onclick="togglePassword('decPassword')">Show/Hide</button>
-        <br>
-        <br>
-        <input type="text" id="decSalt" placeholder="Salt (UTF-8)">
-        <br>
-        <button type="button" onclick="togglePassword('decSalt')">Show/Hide</button>
-        <br>
-        <br>
-        <input type="number" id="decIterations" placeholder="Iterasi (Dec)" min="1" required>
-        <br>
-        <br>
-        <input type="text" id="decNonce" placeholder="Nonce (UTF-8, 24 karakter)" minlength="24" maxlength="24" required>
-        <br>
-        <button type="button" onclick="togglePassword('decNonce')">Show/Hide</button>
         <br>
         <br>
         <button type="submit">Dekripsi</button>
@@ -167,17 +139,18 @@
         document.getElementById('iterations').value = randomNumber;
     }
 
-        async function pbkdf2(password, salt, iterations, keyLength) {
-            const encoder = new TextEncoder();
-            const keyMaterial = await crypto.subtle.importKey('raw', encoder.encode(password), { name: 'PBKDF2' }, false, ['deriveBits']);
-            const derivedBits = await crypto.subtle.deriveBits({
+async function pbkdf2(password, salt, iterations, keyLength) {
+    return crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits'])
+        .then(baseKey => {
+            return crypto.subtle.deriveBits({
                 name: 'PBKDF2',
-                salt: encoder.encode(salt),
+                salt: salt,
                 iterations: iterations,
                 hash: 'SHA-256'
-            }, keyMaterial, keyLength * 8);
-            return new Uint8Array(derivedBits);
-        }
+            }, baseKey, keyLength * 8);
+        })
+        .then(derivedBits => new Uint8Array(derivedBits));
+}
 
         async function sha256(message) {
             const encoder = new TextEncoder();
@@ -315,12 +288,11 @@
             input.type = input.type === 'password' ? 'text' : 'password';
         }
 
-        function clearText(textareaId, counterId, statusId, outputCounterId, additionalOutputId) {
+        function clearText(textareaId, counterId, statusId, outputCounterId) {
             document.getElementById(textareaId).value = '';
             document.getElementById(counterId).textContent = 'Karakter: 0 | Ukuran: 0 Bit';
             document.getElementById(statusId).textContent = '';
             document.getElementById(outputCounterId).textContent = 'Karakter: 0 | Ukuran: 0 Bit';
-            document.getElementById(additionalOutputId).value = '';
         }
 
         function copyToClipboard(textareaId) {
@@ -330,104 +302,123 @@
             alert('Teks telah disalin ke clipboard!');
         }
 
-        document.getElementById('encryptForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
+document.getElementById('encryptForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
 
-            const iterations = parseInt(document.getElementById('iterations').value);
-            if (isNaN(iterations) || iterations <= 0) {
-                document.getElementById('encryptStatus').textContent = 'Jumlah iterasi harus lebih dari 0!';
-                return;
-            }
+    const iterations = parseInt(document.getElementById('iterations').value);
+    if (isNaN(iterations) || iterations <= 0) {
+        document.getElementById('encryptStatus').textContent = 'Jumlah iterasi harus lebih dari 0!';
+        return;
+    }
+    
+    document.getElementById('encryptStatus').textContent = 'Memproses...';
 
-            document.getElementById('encryptStatus').textContent = 'Memproses...';
+    // Menghasilkan salt dan nonce secara acak
+    const saltArray = new Uint8Array(32);
+    window.crypto.getRandomValues(saltArray);
 
-            const text = document.getElementById('inputText').value;
-            const password = document.getElementById('password').value;
-            const salt = document.getElementById('salt').value;
-            const nonceInput = document.getElementById('nonce').value;
-            const outputFormat = document.getElementById('outputFormatEncrypt').value;
+    const nonceArray = new Uint8Array(24);
+    window.crypto.getRandomValues(nonceArray);
 
-            const { key, nonce } = await getKeyAndNonce(password, nonceInput);
-            const derivedKey = await pbkdf2(password, salt, iterations, 32);
+    const text = document.getElementById('inputText').value;
+    const password = document.getElementById('password').value;
 
-            const message = stringToUint8Array(text, document.getElementById('inputFormatEncrypt').value);
-            const box = nacl.secretbox(message, nonce, derivedKey);
-            const ciphertextHex = uint8ArrayToHex(box);
+    const { key } = await getKeyAndNonce(password, nonceArray);
+    const derivedKey = await pbkdf2(password, saltArray, iterations, 32);
 
-            let output;
-            switch (outputFormat) {
-                case 'hex':
-                    output = ciphertextHex;
-                    break;
-                case 'base32':
-                    output = uint8ArrayToBase32(box);
-                    break;
-                case 'base64':
-                    output = uint8ArrayToBase64(box);
-                    break;
-            }
+    const message = stringToUint8Array(text, document.getElementById('inputFormatEncrypt').value);
+    const box = nacl.secretbox(message, nonceArray, derivedKey);
+    const ciphertext = box; // Simpan dalam bentuk Uint8Array
 
-            document.getElementById('outputEncrypt').value = output;
-            updateCounter('outputEncryptCounter', output, outputFormat);
-            document.getElementById('encryptStatus').textContent = 'Enkripsi berhasil!';
+    // Menggabungkan ciphertext, salt, dan nonce dalam format yang sama
+    const combinedOutput = new Uint8Array(ciphertext.length + saltArray.length + nonceArray.length + 8); // Tambahkan ruang untuk iterasi
+    combinedOutput.set(ciphertext, 0);
+    combinedOutput.set(saltArray, ciphertext.length);
+    combinedOutput.set(nonceArray, ciphertext.length + saltArray.length);
+    
+    // Menyimpan iterasi di akhir dalam bentuk Uint32
+    new DataView(combinedOutput.buffer).setUint32(combinedOutput.length - 8, iterations, true);
 
-            // Tampilkan nonce, salt, dan iterasi
-            const additionalOutput = `Informasi Enkripsi/Dekripsi XChaCha20-Poly1305 dengan PBKDF2\n\nPassword:\n\n\nSalt:\n${salt}\n\nIterasi:\n${iterations}\n\nNonce:\n${nonceInput}\n\n*Disarankan simpan di tempat terpisah dengan Ciphertext`;
-            document.getElementById('additionalOutput').value = additionalOutput;
-        });
+    let output;
+    const outputFormat = document.getElementById('outputFormatEncrypt').value;
 
-        document.getElementById('decryptForm').addEventListener('submit', async (event) => {
-            event.preventDefault();
+    switch (outputFormat) {
+        case 'hex':
+            output = uint8ArrayToHex(combinedOutput);
+            break;
+        case 'base32':
+            output = uint8ArrayToBase32(combinedOutput);
+            break;
+        case 'base64':
+            output = uint8ArrayToBase64(combinedOutput);
+            break;
+    }
 
-            const iterations = parseInt(document.getElementById('decIterations').value);
-            if (isNaN(iterations) || iterations <= 0) {
-                document.getElementById('decryptStatus').textContent = 'Jumlah iterasi harus lebih dari 0!';
-                return;
-            }
+    document.getElementById('outputEncrypt').value = output;
+    updateCounter('outputEncryptCounter', output, outputFormat);
+    document.getElementById('encryptStatus').textContent = 'Enkripsi berhasil!';
+});
 
-            document.getElementById('decryptStatus').textContent = 'Memproses...';
+document.getElementById('decryptForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    
+    document.getElementById('decryptStatus').textContent = 'Memproses...';
 
-            const ciphertext = document.getElementById('inputCiphertext').value;
-            const password = document.getElementById('decPassword').value;
-            const salt = document.getElementById('decSalt').value;
-            const nonceInput = document.getElementById('decNonce').value;
-            const inputFormat = document.getElementById('inputFormatDecrypt').value;
-            const outputFormat = document.getElementById('outputFormatDecrypt').value; // Ambil nilai ini
+    const ciphertext = document.getElementById('inputCiphertext').value;
+    const inputFormat = document.getElementById('inputFormatDecrypt').value;
 
-            const { key, nonce } = await getKeyAndNonce(password, nonceInput);
-            const derivedKey = await pbkdf2(password, salt, iterations, 32);
+    let decoded;
+    switch (inputFormat) {
+        case 'hex':
+            decoded = hexToUint8Array(ciphertext);
+            break;
+        case 'base32':
+            decoded = base32ToUint8Array(ciphertext);
+            break;
+        case 'base64':
+            decoded = base64ToUint8Array(ciphertext);
+            break;
+        default:
+            document.getElementById('decryptStatus').textContent = 'Format tidak dikenali';
+            return;
+    }
 
-            const box = stringToUint8Array(ciphertext, inputFormat);
-            const decrypted = nacl.secretbox.open(box, nonce, derivedKey);
+    // Logika parsing baru
+    try {
+        const totalLength = decoded.length;
 
-            if (!decrypted) {
-                document.getElementById('decryptStatus').textContent = 'Dekripsi gagal!';
-                return;
-            }
+        // Mengambil panjang iterasi (8 byte terakhir)
+        const iterations = new DataView(decoded.buffer).getUint32(totalLength - 8, true);
 
-            let output;
-            switch (outputFormat) { // Menggunakan outputFormat yang baru didefinisikan
-                case 'utf8':
-                    output = uint8ArrayToString(decrypted);
-                    break;
-                case 'hex':
-                    output = uint8ArrayToHex(decrypted);
-                    break;
-                case 'base32':
-                    output = uint8ArrayToBase32(decrypted);
-                    break;
-                case 'base64':
-                    output = uint8ArrayToBase64(decrypted);
-                    break;
-                default:
-                    output = uint8ArrayToString(decrypted); // Default ke UTF-8
-            }
+        // Mengambil nonce (24 byte terakhir sebelum iterasi)
+        const nonce = decoded.slice(totalLength - 32, totalLength - 8);
 
-            document.getElementById('outputDecrypt').value = output;
-            updateCounter('outputDecryptCounter', output, outputFormat);
-            document.getElementById('decryptStatus').textContent = 'Dekripsi berhasil!';
-        });
-        
+        // Mengambil salt (32 byte terakhir sebelum nonce)
+        const salt = decoded.slice(totalLength - 64, totalLength - 32);
+
+        // Mengambil pesan terenkripsi (sisa byte)
+        const encryptedMessage = decoded.slice(0, totalLength - 64);
+
+        const password = document.getElementById('decPassword').value;
+        const derivedKey = await pbkdf2(password, salt, iterations, 32);
+
+        // Log untuk derived key
+
+        const decrypted = nacl.secretbox.open(encryptedMessage, nonce, derivedKey);
+
+        if (!decrypted) {
+            document.getElementById('decryptStatus').textContent = 'Dekripsi gagal!';
+            return;
+        }
+
+        const output = uint8ArrayToString(decrypted);
+        document.getElementById('outputDecrypt').value = output;
+        document.getElementById('decryptStatus').textContent = 'Dekripsi berhasil!';
+    } catch (error) {
+        document.getElementById('decryptStatus').textContent = 'Terjadi kesalahan: ' + error.message;
+    }
+});
+
 function calculateEntropy(password) {
     const length = password.length;
     const charsetSize = 
@@ -487,7 +478,7 @@ document.getElementById('password').addEventListener('input', function() {
     const entropy = calculateEntropy(password);
     document.getElementById('passwordEntropy').textContent = `Entropi: ${entropy.toFixed(0)} bit`;
 });
-        
+
     </script>
 </body>
 </html>
